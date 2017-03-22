@@ -15,11 +15,11 @@
 class TimeElement {
 public:
     TimeElement() :
-            next(nullptr), xPos(-1), func(nullptr), inc(nullptr), dec(nullptr) {
+            gfx(nullptr),xPos(-1), func(nullptr), inc(nullptr), dec(nullptr) {
     }
     ;
     TimeElement(GFX * gfx, int xPos, std::function<void(char * str, const Timer & timer)> func, std::function<void(Timer & timer)> inc, std::function<void(Timer & timer)> dec) :
-           next(nullptr), gfx(gfx),  xPos(xPos), func(func), inc(inc), dec(dec) {
+           gfx(gfx),  xPos(xPos), func(func), inc(inc), dec(dec) {
     }
     ;
     void update(const Timer & timer) {
@@ -47,11 +47,13 @@ public:
             gfx->setBackground(BLACK);
             gfx->setForeground(WHITE);
             inc(timer);
+            print();
         }
     }
     void decTime(Timer & timer) {
         if (dec != nullptr) {
             dec(timer);
+            print();
         }
     }
 
@@ -59,7 +61,6 @@ public:
         return str;
     }
 
-    TimeElement * next;
 private:
     GFX * gfx;
     int xPos;

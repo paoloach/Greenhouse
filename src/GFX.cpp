@@ -214,10 +214,54 @@ const Font smallFont = { 8, 12, 0x20, 0x5F, false, font8_12Data };
 GFX::GFX() :
         foreground(255, 255, 255), background(0, 0, 0) {
     driver = LcdID::ID_UNKNOWN;
-    rotation = RotationId::ROT_0;
     width = 0xFFFF;
     height = 0xFFFF;
     font = &bigFont;
+}
+
+void GFX::drawFastVLine(Point p, uint16_t length, Color6Bit color) {
+    int16_t y2;
+
+    // Initial off-screen clipping
+    if ((p.x < 0) || (p.x >= width) || (p.y >= height) || ((y2 = (p.y + length - 1)) < 0))
+        return;
+    if (p.y < 0) {
+        length += p.y;
+        p.y = 0;
+    }
+    if (y2 >= height) {
+        y2 = height - 1;
+        length = y2 - p.y + 1;
+    }
+
+    activeCS();
+    setAddrWindow(p.x, p.y, p.x, y2);
+    flood(color, length);
+    setAddrWindow(0, 0, width - 1, height - 1);
+    idleCS();
+}
+
+void GFX::drawFastHLine(Point p, uint16_t length, Color6Bit color) {
+    int16_t x2;
+
+    // Initial off-screen clipping
+    if ((p.y < 0) || (p.y >= height) || (p.x >= width) || ((x2 = (p.x + length - 1)) < 0))
+        return;
+
+    if (p.x < 0) {        // Clip left
+        length += p.x;
+        p.x = 0;
+    }
+    if (x2 >= width) { // Clip right
+        x2 = width - 1;
+        length = x2 - p.x + 1;
+    }
+
+    activeCS();
+    setAddrWindow(p.x, p.y, x2, p.y);
+    flood(color, length);
+    setAddrWindow(0, 0, width - 1, height - 1);
+    idleCS();
 }
 
 void GFX::drawCircle(Point center, int16_t r, Color6Bit color) {
@@ -287,10 +331,9 @@ void GFX::fillCircleHelper(Point c, int16_t r, uint8_t cornername, int16_t delta
     }
 }
 
-// Bresenham's algorithm
 void GFX::drawLine(Point start, Point end, Color6Bit color) {
-    int16_t dx = abs(end.x - start.x);
-    int16_t dy = abs(end.y - start.y);
+    volatile int16_t dx = abs(end.x - start.x);
+    volatile int16_t dy = abs(end.y - start.y);
 
     if (dx == 0) {
         if (start.y < end.y)
@@ -310,17 +353,20 @@ void GFX::drawLine(Point start, Point end, Color6Bit color) {
     if (start.x > end.x)
         std::swap(start, end);
 
-    int32_t steep = (((uint32_t) dy) << 16) / (((uint32_t) dx) << 16);
-    int32_t y     = start.y<<16;
-    int32_t yPrev = start.y<<16;
+    volatile int32_t steep = (((uint32_t) dy) << 16) / dx;
+    if (start.y > end.y)
+        steep = -steep;
+    volatile int32_t y = (int32_t) start.y << 16;
+    volatile int32_t yPrev = (int32_t) start.y << 16;
     for (; start.x <= end.x; start.x++) {
-        dy = ((y-yPrev) >> 16);
-        uint16_t y1 = (std::min(y,yPrev)>> 16);
-        if (dy > 0){
-            drawFastVLine(Point(start.x,y1), dy, color);
+        dy = ((y - yPrev) >> 16);
+        uint16_t y1 = (std::min(y, yPrev) >> 16);
+        if (dy > 0) {
+            drawFastVLine(Point(start.x, y1), dy, color);
         } else {
             drawPixel(Point(start.x, y1), color);
         }
+        yPrev = y;
         y += steep;
     }
 }
@@ -368,9 +414,32 @@ void GFX::drawRect(Point leftTop, int16_t w, int16_t h, Color6Bit color) {
 }
 
 void GFX::fillRect(Point && leftTop, int16_t w, int16_t h, Color6Bit color) {
-    for (int16_t i = leftTop.x; i < leftTop.x + w; i++) {
-        drawFastVLine(Point { i, leftTop.y }, h, color);
+    int16_t x2, y2;
+
+    if ((w <= 0) || (h <= 0) || (leftTop.x >= width) || (leftTop.y >= height) || ((x2 = leftTop.x + w - 1) < 0) || ((y2 = leftTop.y + h - 1) < 0))
+        return;
+    if (leftTop.x < 0) {
+        w += leftTop.x;
+        leftTop.x = 0;
     }
+    if (leftTop.y < 0) {
+        h += leftTop.y;
+        leftTop.y = 0;
+    }
+    if (x2 >= width) {
+        x2 = width - 1;
+        w = x2 - leftTop.x + 1;
+    }
+    if (y2 >= height) {
+        y2 = height - 1;
+        h = y2 - leftTop.y + 1;
+    }
+
+    activeCS();
+    setAddrWindow(leftTop.x, leftTop.y, x2, y2);
+    flood(color, w * h);
+    setAddrWindow(0, 0, width - 1, height - 1);
+    idleCS();
 }
 
 void GFX::drawRoundRect(Point leftTop, int16_t w, int16_t h, int16_t r, Color6Bit color) {
@@ -440,7 +509,7 @@ void GFX::drawChar(Point p, unsigned char c, uint8_t size) {
     }
 }
 
-void GFX::drawString(int x, int y, const char * s) {
+void GFX::drawString(uint16_t x, uint16_t y, const char * s) {
     while (*s != 0) {
         drawChar(x, y, *s);
         x += font->xSize;
@@ -448,8 +517,8 @@ void GFX::drawString(int x, int y, const char * s) {
     }
 }
 
-void GFX::drawChar(int startX, int startY, unsigned char c) {
-    if ((startX >= width) || (startY >= height) || ((startX + font->xSize - 1) < 0) || ((startY + font->ySize - 1) < 0))
+void GFX::drawChar(uint16_t xStart, uint16_t yStart, unsigned char c) {
+    if ((xStart >= width) || (yStart >= height) || ((xStart + font->xSize - 1) < 0) || ((yStart + font->ySize - 1) < 0))
         return;
 
     if (c < font->offset)
@@ -460,14 +529,14 @@ void GFX::drawChar(int startX, int startY, unsigned char c) {
 
     uint8_t dataLen = (font->xSize * font->ySize) / 8;
     const uint8_t * data = font->data + dataLen * c;
-    Point pixelPos { startX, startY };
+    Point pixelPos { xStart, yStart };
     int8_t x;
     int8_t y;
     if (font->row) {
-        for (pixelPos.x = startX, x = 0; x < font->xSize; x++, pixelPos.x++) {
+        for (pixelPos.x = xStart, x = 0; x < font->xSize; x++, pixelPos.x++) {
             uint8_t bit = 1;
             uint8_t row = *data;
-            for (pixelPos.y = startY, y = 0; y < font->xSize; y++, pixelPos.y++) {
+            for (pixelPos.y = yStart, y = 0; y < font->xSize; y++, pixelPos.y++) {
                 putCharPixel(pixelPos, row, 1);
                 row >>= 1;
                 bit++;
@@ -479,10 +548,10 @@ void GFX::drawChar(int startX, int startY, unsigned char c) {
             }
         }
     } else {
-        for (pixelPos.y = startY, y = 0; y < font->ySize; y++, pixelPos.y++) {
-            uint8_t bit = 0;
+        for (pixelPos.y = yStart, y = 0; y < font->ySize; y++, pixelPos.y++) {
+            uint8_t bit = 1;
             uint8_t col = *data;
-            for (pixelPos.x = startX, x = 0; x < font->xSize; x++, pixelPos.x++) {
+            for (pixelPos.x = xStart, x = 0; x < font->xSize; x++, pixelPos.x++) {
                 putCharPixel(pixelPos, col, 1);
                 col <<= 1;
                 bit++;

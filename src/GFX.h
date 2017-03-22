@@ -9,23 +9,16 @@
 #define GFX_H_
 
 #include <stdint.h>
+#include <memory>
 #include "BaseAcccess.h"
 
 enum class LcdID {
-    ID_932X, ID_7575, ID_9341, ID_HX8357D, ID_SPFD5408, ID_S6D0129, ID_UNKNOWN
+    ID_932X, ID_7575, ID_9341, ID_HX8357D, ID_SPFD5408, ID_S6D0129, ID_HX8367, ID_UNKNOWN
 };
 
-enum class RotationId {
-    ROT_0, ROT_90, ROT_180, ROT_270
-};
 
 enum class DriverQuality {
-    OFF,
-    SMALL,
-    MEDIUM_LOW,
-    MEDIUM,
-    MEDIUM_HIGH,
-    HIGHT
+    OFF, SMALL, MEDIUM_LOW, MEDIUM, MEDIUM_HIGH, HIGHT
 };
 
 struct Font {
@@ -37,7 +30,6 @@ struct Font {
     const uint8_t * data;
 };
 
-
 extern const Font bigFont;
 extern const Font smallFont;
 
@@ -45,7 +37,8 @@ class Color6Bit {
 private:
     uint8_t components[3];
 public:
-    constexpr Color6Bit(uint8_t red, uint8_t blue, uint8_t green):components{red,blue, green} {
+    constexpr Color6Bit(uint8_t red, uint8_t blue, uint8_t green) :
+            components { red, blue, green } {
     }
 
     bool operator==(Color6Bit & a) {
@@ -83,7 +76,7 @@ class Point {
 public:
     Point( Point && point): x(point.x), y(point.y){}
 
-    Point( Point & point): x(point.x), y(point.y){}
+    Point( const Point & point): x(point.x), y(point.y){}
 
     Point & operator=(const Point & a){
         x = a.x;
@@ -99,6 +92,10 @@ public:
             x(0xFFFF), y(0xFFFF) {
     }
 
+    uint16_t distSquare(Point & p){
+        return (p.x-x)*(p.x-x)+(p.y-y)*(p.y-y);
+    }
+
     int16_t x;
     int16_t y;
 };
@@ -111,10 +108,19 @@ public:
         initIOPort();
     }
 
-    virtual void drawPixel(Point && point, Color6Bit color) =0;
-    virtual void drawFastHLine(Point point, uint16_t length, Color6Bit color) = 0;
-    virtual void drawFastVLine(Point point, uint16_t length, Color6Bit color) = 0;
+    void drawPixel(Point && point, Color6Bit color) {
+        if ((point.x < 0) || (point.y < 0) || (point.x >= width) || (point.y >= height))
+            return;
+        activeCS();
+        drawPixelInternal(std::move(point), std::move(color));
+        idleCS();
+    }
+    virtual void drawPixelInternal(Point && point, Color6Bit && color)=0;
+    virtual void setAddrWindow(uint16_t left, uint16_t top, uint16_t right, uint16_t bottom) =0;
+    virtual void flood(Color6Bit color, uint32_t len)=0;
 
+    void drawFastHLine(Point p, uint16_t length, Color6Bit color);
+    void drawFastVLine(Point point, uint16_t length, Color6Bit color);
     void drawLine(Point start, Point end, Color6Bit color);
     void drawCircle(Point center, int16_t r, Color6Bit color);
     void drawCircleHelper(Point center, int16_t r, uint8_t cornername, Color6Bit color);
@@ -124,12 +130,18 @@ public:
     void drawRoundRect(Point leftTop, int16_t w, int16_t h, int16_t r, Color6Bit color);
     void fillRoundRect(Point leftTop, int16_t w, int16_t h, int16_t r, Color6Bit color);
     void drawChar(Point p, unsigned char c, uint8_t size);
-    void drawChar(int x, int y, unsigned char c);
-    void drawString(int x, int y, const char * s);
-    void drawString(const Point & p, const char * s) {drawString(p.x, p.y, s);}
-    void setFont(const Font * font){this->font = font; }
-    void setForeground(Color6Bit color){foreground = color;}
-    void setBackground(Color6Bit color){background = color;}
+    void drawChar(uint16_t x, uint16_t y, unsigned char c);
+    void drawString(uint16_t x, uint16_t y, const char * s);
+    void drawString(const Point  point, const char * s){drawString(point.x, point.y, s);}
+    void setFont(const Font * font) {
+        this->font = font;
+    }
+    void setForeground(Color6Bit color) {
+        foreground = color;
+    }
+    void setBackground(Color6Bit color) {
+        background = color;
+    }
 
     uint16_t width;
     uint16_t height;
@@ -138,7 +150,6 @@ private:
     void putCharPixel(Point p, uint8_t bits, uint8_t size);
 protected:
     LcdID driver;
-    RotationId rotation;
 
     const Font * font;
     Color6Bit foreground;

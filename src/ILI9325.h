@@ -19,14 +19,10 @@ public:
     ILI9325(bool swapX=false);
 
     static bool checkPresence();
-    void setRotation(RotationId rotation);
     void drawPixel(Point point, Color6Bit color) ;
-    void drawPixel(Point && point, Color6Bit color) override;
-    void drawFastHLine(Point point, uint16_t length, Color6Bit color) override;
-    void drawFastVLine(Point point, uint16_t length, Color6Bit color) override;
-    void fillRect(int16_t x1, int16_t y1, int16_t w, int16_t h, Color6Bit fillcolor);
+    void drawPixelInternal(Point && point, Color6Bit && color) override;
 
-    void setAddrWindow(uint16_t left, uint16_t top, uint16_t right, uint16_t bottom);
+    void setAddrWindow(uint16_t left, uint16_t top, uint16_t right, uint16_t bottom) override;
     void flood(Color6Bit color, uint32_t len);
     void setDriverQuality(DriverQuality driverQuality);
     void static reset();
