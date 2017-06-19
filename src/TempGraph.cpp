@@ -9,10 +9,11 @@
 #include <stdio.h>
 #include "diag/Trace.h"
 #include "TempGraph.h"
+#include "Hardware.h"
 
-TempGraph::TempGraph(uint16_t top, uint16_t bottom, const Timer & timer, DHT * dht, GFX * gfx,uint16_t min, uint16_t max, uint8_t index) :
-        top(top), bottom(bottom), timer(timer), next(timer.getHour()), dht(dht), gfx(gfx),min(min),max(max), right((max+min)/2),index(index) {
-    for (int i = 0; i < 100; i++) {
+TempGraph::TempGraph(uint16_t top, uint16_t bottom, Timer & timer, DHT * dht, uint16_t min, uint16_t max, uint8_t index) :
+        dht(dht), minuteFromPoint(20), top(top), bottom(bottom), timer(timer), next(timer.getHour()), min(min), max(max), right((max + min) / 2), index(index) {
+    for (int i = 0; i < dataSize; i++) {
         data[i] = std::make_tuple(1000, 1000);
     }
 
@@ -23,13 +24,7 @@ void TempGraph::update(bool paint) {
         //auto value = dht->getMean();
         auto value = dht->getIstantaneus();
         next = timer.getHour();
-        //next.incMinute(15);
-        next.incSecond();
-        next.incSecond();
-        next.incSecond();
-        next.incSecond();
-        next.incSecond();
-        next.incSecond();
+        next.incMinute(minuteFromPoint);
         if (paint) {
             paintGraph(true);
         }
@@ -50,10 +45,10 @@ void TempGraph::initGraph() {
     gfx->setBackground(WHITE);
     gfx->setFont(&smallFont);
     uint16_t step = height / 6;
-    uint16_t stepVal = (max-min)/6;
-    for(uint8_t i=1; i < 6; i++){
-        sprintf(buffer, "%2u", (min+i*stepVal)/10);
-        gfx->drawString(0, bottom - i*step, buffer);
+    uint16_t stepVal = (max - min) / 6;
+    for (uint8_t i = 1; i < 6; i++) {
+        sprintf(buffer, "%2u", (min + i * stepVal) / 10);
+        gfx->drawString(0, bottom - i * step, buffer);
     }
 }
 
@@ -64,7 +59,7 @@ void TempGraph::paintGraph(bool clear) {
     uint16_t temp;
     Point prevTemp;
     Point p(39, 0);
-    for (int i = 0; i < dateSize; i++) {
+    for (int i = 0; i < dataSize; i++) {
         if (index == 0)
             temp = std::get<0>(data[i]);
         else
@@ -73,7 +68,7 @@ void TempGraph::paintGraph(bool clear) {
             temp = min;
         if (temp > max)
             temp = max;
-        p.y = bottom - ((temp - min) * height) / (max- min);
+        p.y = bottom - ((temp - min) * height) / (max - min);
         int32_t blue;
         int32_t red;
         uint32_t green;
@@ -83,14 +78,14 @@ void TempGraph::paintGraph(bool clear) {
                 blue = 0;
             if (blue > 255)
                 blue = 255;
-                red = (256 * (temp-right)) / right;
+            red = (256 * (temp - right)) / right;
             if (red < 0)
                 red = 0;
             if (red > 255)
                 red = 255;
-            green=0;
+            green = 0;
         } else {
-            blue=255;
+            blue = 255;
             green = 255;
             red = 255;
         }

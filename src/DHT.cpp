@@ -9,10 +9,10 @@
 #include <array>
 #include "diag/Trace.h"
 
-void TIM_TimeBaseInit(TIM_TimeBaseInitTypeDef* TIM_TimeBaseInitStruct) {
+void DHT::TIM_TimeBaseInit(TIM_TimeBaseInitTypeDef* TIM_TimeBaseInitStruct) {
     uint16_t tmpcr1 = 0;
 
-    tmpcr1 = TIM2->CR1;
+    tmpcr1 = timer->CR1;
 
     tmpcr1 &= (uint16_t) (~((uint16_t) (TIM_CR1_DIR | TIM_CR1_CMS)));
     tmpcr1 |= (uint32_t) TIM_TimeBaseInitStruct->TIM_CounterMode;
@@ -20,16 +20,22 @@ void TIM_TimeBaseInit(TIM_TimeBaseInitTypeDef* TIM_TimeBaseInitStruct) {
     tmpcr1 &= (uint16_t) (~((uint16_t) TIM_CR1_CKD));
     tmpcr1 |= (uint32_t) TIM_TimeBaseInitStruct->TIM_ClockDivision;
 
-    TIM2->CR1 = tmpcr1;
-    TIM2->ARR = TIM_TimeBaseInitStruct->TIM_Period;
-    TIM2->PSC = TIM_TimeBaseInitStruct->TIM_Prescaler;
-    TIM2->EGR = TIM_PSCReloadMode_Immediate;
+    timer->CR1 = tmpcr1;
+    timer->ARR = TIM_TimeBaseInitStruct->TIM_Period;
+    timer->PSC = TIM_TimeBaseInitStruct->TIM_Prescaler;
+    timer->EGR = TIM_PSCReloadMode_Immediate;
 }
 
-DHT::DHT() :
-        indexLast(0), full(false), status(DHT_START) {
+DHT::DHT(GPIO_TypeDef * port, uint16_t pin, TIM_TypeDef * timer) :
+        indexLast(0), full(false), status(DHT_START), timer(timer), DATA_PORT(port), DATA_PIN(pin) {
     RCC_APB2PeriphClockCmd(ClockIdDataPort(), ENABLE);
-    RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM2, ENABLE);
+    if (timer == TIM2) {
+        RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM2, ENABLE);
+    } else if (timer == TIM3) {
+        RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM3, ENABLE);
+    } else if (timer == TIM4) {
+        RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM4, ENABLE);
+    }
 
     GPIO_InitTypeDef GPIO_InitStructure;
 
@@ -38,6 +44,12 @@ DHT::DHT() :
     GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
     GPIO_Init(DATA_PORT, &GPIO_InitStructure);
     DATA_PORT->BSRR = DATA_PIN;
+
+    GPIO_InitStructure.GPIO_Pin = GPIO_Pin_5;
+    GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
+    GPIO_Init(GPIOA, &GPIO_InitStructure);
+    GPIOA->BSRR = GPIO_Pin_5;
 }
 
 std::tuple<int16_t, int16_t> DHT::getMean() {
@@ -66,6 +78,7 @@ void DHT::exec() {
     GPIO_InitTypeDef GPIO_InitStructure;
     switch (status) {
     case DHT_START:
+        GPIOA->BSRR = GPIO_Pin_5;
         GPIO_InitStructure.GPIO_Pin = DATA_PIN;
         GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
         GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
@@ -77,14 +90,14 @@ void DHT::exec() {
         timerInit.TIM_Period = 420; // 210ms
         timerInit.TIM_CounterMode = TIM_CounterMode_Up;
         timerInit.TIM_ClockDivision = TIM_CKD_DIV1;
-        TIM_TimeBaseInit( &timerInit);
-        TIM2->CNT = 0;
-        TIM2->SR = (uint16_t) ~TIM_FLAG_Update;
-        TIM2->CR1 |= TIM_CR1_CEN;
+        TIM_TimeBaseInit(&timerInit);
+        timer->CNT = 0;
+        timer->SR = (uint16_t) ~TIM_FLAG_Update;
+        timer->CR1 |= TIM_CR1_CEN;
         status = DHT_WAIT_END_START;
         break;
     case DHT_WAIT_END_START:
-        if (TIM2->SR & TIM_FLAG_Update) {
+        if (timer->SR & TIM_FLAG_Update) {
             status = DHT_READ;
         }
         break;
@@ -103,13 +116,13 @@ void DHT::exec() {
         timerInit.TIM_Period = 20000; // 10s
         timerInit.TIM_CounterMode = TIM_CounterMode_Up;
         timerInit.TIM_ClockDivision = TIM_CKD_DIV1;
-        TIM_TimeBaseInit( &timerInit);
-        TIM2->CNT = 0;
-        TIM2->SR = (uint16_t) ~TIM_FLAG_Update;
+        TIM_TimeBaseInit(&timerInit);
+        timer->CNT = 0;
+        timer->SR = (uint16_t) ~TIM_FLAG_Update;
         status = DHT_WAIT_SAMPLE;
         break;
     case DHT_WAIT_SAMPLE:
-        if (TIM2->SR & TIM_FLAG_Update) {
+        if (timer->SR & TIM_FLAG_Update) {
             status = DHT_START;
         }
         break;
@@ -128,25 +141,49 @@ void DHT::read() {
     timerInit.TIM_Prescaler = 72; // 1uS
     timerInit.TIM_Period = 1000;
     timerInit.TIM_CounterMode = TIM_CounterMode_Up;
+
+    GPIOA->BRR = GPIO_Pin_5;
+
     timerInit.TIM_ClockDivision = TIM_CKD_DIV1;
-    TIM_TimeBaseInit( &timerInit);
+    TIM_TimeBaseInit(&timerInit);
     GPIO_Init(DATA_PORT, &GPIO_InitStructure);
-    waitForuS(30);
-    while (readBit())
-        ;
-    while (!readBit())
-        ;
-    while (readBit())
-        ;
+    loadTimer(500);
+    GPIOA->BSRR = GPIO_Pin_5;
+    while (readBit()) {
+        if (timer->SR & TIM_FLAG_Update) {
+            invalidRead(dataRead);
+            return;
+        }
+    }
+    loadTimer(500);
+    while (!readBit()) {
+        if (timer->SR & TIM_FLAG_Update) {
+            invalidRead(dataRead);
+            return;
+        }
+    }
+    loadTimer(500);
+    while (readBit()) {
+        if (timer->SR & TIM_FLAG_Update) {
+            invalidRead(dataRead);
+            return;
+        }
+    }
     for (int i = 0; i < 5; i++) {
         uint8_t tmpByte = 0;
         for (uint8_t i = 0; i < 8; i++) {
             while (!readBit())
                 ;
+            GPIOA->BSRR = GPIO_Pin_5;
             loadTimer(80);
-            while (readBit())
-                ;
+            while (readBit()) {
+                if (timer->SR & TIM_FLAG_Update) {
+                    invalidRead(dataRead);
+                    return;
+                }
+            }
             tmpByte <<= 1;
+            GPIOA->BRR = GPIO_Pin_5;
             tmpByte |= getBit();
         }
         dataRead[i] = tmpByte;
@@ -163,6 +200,7 @@ void DHT::read() {
         }
         update = true;
     } else {
+        invalidRead(dataRead);
         trace_printf("Fail checksum\n");
     }
 

@@ -14,7 +14,6 @@ namespace ILI9341 {
 ILI9341::ILI9341() {
     width = DEFAULT_WIDTH;
     height = DEFAULT_HEIGTH;
-    driver = LcdID::ID_9341;
     activeCS();
 
     resetOn();
@@ -22,13 +21,25 @@ ILI9341::ILI9341() {
     resetOff();
     Timer::sleep(150);
 
+    auto ILI9341Id = ReadId::read();
+
+    if (ILI9341Id[0] == 0x00 && ILI9341Id[1] == 0x93 && ILI9341Id[2] == 0x41) {
+        driver = LcdID::ID_9341;
+    }
+    if (ILI9341Id[0] == 0x00 && ILI9341Id[1] == 0x93 && ILI9341Id[2] == 0x42) {
+        driver = LcdID::ID_9342;
+    }
+
     DisplayOff::apply();
     PowerCtl1::write(0x23);
     PowerCtl2::write(0x10);
     VCOMCtl1::write(0x3e28);
     VCOMCtl2::write(0x86);
     //VCOMCtl2::write(0xC0);
-    MemAccessCtrl::write (MADCTL_MY);
+    if (driver == LcdID::ID_9341)
+        MemAccessCtrl::write(MADCTL_MY);
+    if (driver == LcdID::ID_9342)
+        MemAccessCtrl::write(MADCTL_MV | MADCTL_MY);
     PixelFormatSet::write(0x66);
     FrameCtrl::write(0x1B00);
     DisplayFnCtl::write(0x08, 0x82, 0x27);
@@ -41,7 +52,7 @@ ILI9341::ILI9341() {
 
     setAddrWindow(0, 0, width - 1, height - 1);
 
-    flood(Color6Bit(255,255,255), width*height);
+    flood(Color6Bit(255, 255, 255), width * height);
 
     idleCS();
 }
@@ -57,8 +68,12 @@ bool ILI9341::checkPresence() {
     auto ILI9341Id = ReadId::read();
     idleCS();
 
-    if (ILI9341Id[0] == 0x00 && ILI9341Id[1] == 0x93 && ILI9341Id[2] == 0x41)
+    if (ILI9341Id[0] == 0x00 && ILI9341Id[1] == 0x93 && ILI9341Id[2] == 0x41) {
         result = true;
+    }
+    if (ILI9341Id[0] == 0x00 && ILI9341Id[1] == 0x93 && ILI9341Id[2] == 0x42) {
+        result = true;
+    }
     return result;
 }
 
@@ -81,7 +96,9 @@ void ILI9341::drawPixel(Point p, Color6Bit color) {
 }
 
 void ILI9341::drawPixelInternal(Point && p, Color6Bit && color) {
-    setAddrWindow(p.x, p.y, width - 1, height - 1);
+    uint16_t x = p.x;
+
+    setAddrWindow(x, p.y, width - 1, height - 1);
     MemoryWrite::write(color);
 }
 

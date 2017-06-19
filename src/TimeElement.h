@@ -10,19 +10,18 @@
 
 #include <functional>
 #include "Timer.h"
-#include "GFX.h"
+#include "Hardware.h"
 
 class TimeElement {
 public:
-    TimeElement() :
-            gfx(nullptr),xPos(-1), func(nullptr), inc(nullptr), dec(nullptr) {
+    TimeElement() :xPos(-1), func(nullptr), inc(nullptr), dec(nullptr) {
     }
     ;
-    TimeElement(GFX * gfx, int xPos, std::function<void(char * str, const Timer & timer)> func, std::function<void(Timer & timer)> inc, std::function<void(Timer & timer)> dec) :
-           gfx(gfx),  xPos(xPos), func(func), inc(inc), dec(dec) {
+    TimeElement( int xPos, std::function<void(char * str, Timer & timer)> func, std::function<void(Timer & timer)> inc, std::function<void(Timer & timer)> dec) :
+             xPos(xPos), func(func), inc(inc), dec(dec) {
     }
     ;
-    void update(const Timer & timer) {
+    void update( Timer & timer) {
         func(str, timer);
     }
     void print() {
@@ -62,10 +61,9 @@ public:
     }
 
 private:
-    GFX * gfx;
     int xPos;
     char str[4];
-    std::function<void(char * str, const Timer & timer)> func;
+    std::function<void(char * str, Timer & timer)> func;
     std::function<void(Timer & timer)> inc;
     std::function<void(Timer & timer)> dec;
 

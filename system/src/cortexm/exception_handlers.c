@@ -40,6 +40,7 @@ Reset_Handler(void)
   {
     asm volatile
     (
+        " mov     sp,r0\n"
         " ldr     r0,=_start \n"
         " bx      r0"
         :

@@ -17,7 +17,7 @@ enum DHTStatus {
 
 class DHT {
 public:
-    DHT();
+    DHT(GPIO_TypeDef * port, uint16_t pin, TIM_TypeDef * timer);
 public:
     void exec();
     std::tuple<int16_t, int16_t> getIstantaneus() {
@@ -39,31 +39,46 @@ private:
     bool full;
     DHTStatus status;
     void read();
+    void invalidRead(std::array<uint8_t, 5> & dataRead) {
+        auto iter = dataRead.begin();
+        *iter = 0xFF;
+        iter++;
+        *iter = 0xFF;
+        iter++;
+        *iter = 0xFF;
+        iter++;
+        *iter = 0xFF;
+        iter++;
+        *iter = 0xFF;
+    }
 private:
-    static bool readBit() {
+    void TIM_TimeBaseInit(TIM_TimeBaseInitTypeDef* TIM_TimeBaseInitStruct);
+    bool readBit() {
         return DATA_PORT->IDR & DATA_PIN;
     }
-    static void loadTimer(uint16_t count) {
-        TIM2->ARR = count;
-        TIM2->CNT = 0;
+    void loadTimer(uint16_t count) {
+        timer->ARR = count;
+        timer->CNT = 0;
+        timer->SR = (uint16_t) ~TIM_FLAG_Update;
     }
 
-    static void waitForuS(uint16_t count) {
-        TIM2->ARR = count;
-        TIM2->CNT = 0;
-        TIM2->SR = (uint16_t) ~TIM_FLAG_Update;
-        while (!(TIM2->SR & TIM_FLAG_Update))
+    void waitForuS(uint16_t count) {
+        timer->ARR = count;
+        timer->CNT = 0;
+        timer->SR = (uint16_t) ~TIM_FLAG_Update;
+        while (!(timer->SR & TIM_FLAG_Update))
             ;
     }
 
-    static bool getBit() {
-        return TIM2->CNT > 60;
+    bool getBit() {
+        return timer->CNT > 60;
     }
 private:
 
-    constexpr static auto DATA_PORT = GPIOA;
-    constexpr static auto DATA_PIN = GPIO_Pin_7;
-    constexpr static int ClockIdDataPort() {
+    TIM_TypeDef * timer;
+    GPIO_TypeDef * DATA_PORT;
+    uint16_t DATA_PIN;
+    int ClockIdDataPort() {
         return DATA_PORT == GPIOA ? RCC_APB2Periph_GPIOA : DATA_PORT == GPIOB ? RCC_APB2Periph_GPIOB : DATA_PORT == GPIOC ? RCC_APB2Periph_GPIOC : 0;
     }
 };

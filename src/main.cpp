@@ -11,14 +11,15 @@
 #include "diag/Trace.h"
 
 #include "Timer.h"
-#include "BlinkLed.h"
 #include "TimeElement.h"
 #include "TempGraph.h"
 #include "DHT.h"
 #include "ILI9325.h"
 #include "ILI9341.h"
 #include "HX8367.h"
-#include "TouchScreen.h"
+#include "TimerLight.h"
+#include "Hardware.h"
+#include "Setting.h"
 
 // ----- main() ---------------------------------------------------------------
 
@@ -33,8 +34,6 @@ enum class ModifyType {
     None, Seconds = 0, Minuts = 1, Hours = 2, Last = 3
 };
 
-GFX * graphics;
-
 constexpr uint8_t WIDTH_FONT = 8;
 constexpr Point HOUR_START_POINT { 10, 8 };
 constexpr Point TEMP_START_POINT { 10, 40 };
@@ -42,14 +41,12 @@ constexpr Point TEMP_POINT { TEMP_START_POINT.x + 6 * WIDTH_FONT, 40 };
 constexpr Point HUMIDITY_POINT { TEMP_START_POINT.x + 21 * WIDTH_FONT, 40 };
 constexpr uint16_t BOTTOM_TEMP_INST = TEMP_POINT.y + 12 + 8;
 
-
-
 struct TimerVisual {
     TimeElement * second;
     TimeElement * minute;
     TimeElement * hour;
 
-    void update(Timer & timer){
+    void update(Timer & timer) {
         second->update(timer);
         minute->update(timer);
         hour->update(timer);
@@ -61,54 +58,69 @@ struct TimerVisual {
 
 static void initGraphics();
 static void setMainPage();
-static void setTime(TouchScreen * touchScreen,Timer * timer, TimerVisual * tVis);
+static void updateDHT(DHT * dht);
 
 int main(int argc, char* argv[]) {
     int32_t prevSec = 0;
-    DHT dht;
     Timer timer;
-    BlinkLed blinkLed;
-    Hour start(7, 0, 0);
-    Hour end(21, 0, 0);
     TimerVisual tVis;
+    TimerLight timerLight(timer);
 
     trace_printf("System clock: %u Hz\n", SystemCoreClock);
 
     timer.start();
     initGraphics();
 
-    TouchScreen touchScreen(graphics->width, graphics->height);
+    TempGraph graph((gfx->height - BOTTOM_TEMP_INST) / 2 + BOTTOM_TEMP_INST, gfx->height, timer, &dht1, 100, 300, 0);
+    TempGraph graphHumidity(BOTTOM_TEMP_INST, (gfx->height - BOTTOM_TEMP_INST) / 2 + BOTTOM_TEMP_INST, timer, &dht1, 500, 900, 1);
 
-    TempGraph graph((graphics->height - BOTTOM_TEMP_INST) / 2 + BOTTOM_TEMP_INST, graphics->height, timer, &dht, graphics, 50, 350, 0);
-    TempGraph graphHumidity(BOTTOM_TEMP_INST, (graphics->height - BOTTOM_TEMP_INST) / 2 + BOTTOM_TEMP_INST, timer, &dht, graphics, 400, 800, 1);
-
-    tVis.second = new TimeElement(graphics, 11 * 16 + HOUR_START_POINT.x, [](char * buffer, const Timer & timer) {sprintf(buffer, "%.02u", timer.getHour().getSeconds());},
+    tVis.second = new TimeElement(11 * 16 + HOUR_START_POINT.x, [](char * buffer, Timer & timer) mutable {sprintf(buffer, "%.02u", timer.getHour().getSeconds());},
             [](Timer & timer) {timer.hour.incSecond();}, [](Timer & timer) {timer.hour.decSecond();});
-    tVis.minute = new TimeElement (graphics, 8 * 16 + HOUR_START_POINT.x, [](char * buffer, const Timer & timer) {sprintf(buffer, "%.02u", timer.getHour().getMinutes());},
+    tVis.minute = new TimeElement(8 * 16 + HOUR_START_POINT.x, [](char * buffer, Timer & timer) mutable {sprintf(buffer, "%.02u", timer.getHour().getMinutes());},
             [](Timer & timer) {timer.hour.incMinute();}, [](Timer & timer) {timer.hour.decMinute();});
-    tVis.hour = new TimeElement(graphics, 5 * 16 + HOUR_START_POINT.x, [](char * buffer, const Timer & timer) {sprintf(buffer, "%.02u", timer.getHour().getHours());}, [](Timer & timer) {timer.hour.incHour();},
-            [](Timer & timer) {timer.hour.decHour();});
+    tVis.hour = new TimeElement(5 * 16 + HOUR_START_POINT.x, [](char * buffer, Timer & timer) mutable {sprintf(buffer, "%.02u", timer.getHour().getHours());},
+            [](Timer & timer) {timer.hour.incHour();}, [](Timer & timer) {timer.hour.decHour();});
 
     setMainPage();
     graph.initGraph();
     graphHumidity.initGraph();
-    while (1) {
-        dht.exec();
-        if (dht.isUpdate()) {
-            char buffer[10];
-            auto info = dht.getIstantaneus();
-            graphics->setFont(&smallFont);
-            sprintf(buffer, "%d.%d", std::get<0>(info) / 10, std::get<0>(info) % 10);
-            graphics->drawString(TEMP_POINT, buffer);
-            sprintf(buffer, "%d.%d", std::get<1>(info) / 10, std::get<1>(info) % 10);
-            graphics->drawString(HUMIDITY_POINT, buffer);
-        }
-        if (prevSec != timer.getHour().seconds) {
-            if (timer.getHour() > start && end > timer.getHour()) {
-                blinkLed.turnOff();
-            } else {
-                blinkLed.turnOn();
+    DHT * currentDHT = &dht1;
+
+    while (true) {
+        if (buttonSetting.check()) {
+            if (buttonSetting) {
+                timer.stop = true;
+                std::unique_ptr<Setting> setting(new Setting(timer.getHour(), timerLight.start, timerLight.end));
+                setting->run();
+                timer.stop = false;
+                setMainPage();
             }
+        }
+
+        if (buttonNext.check()) {
+            if (buttonNext) {
+                char c;
+                if (currentDHT == &dht1) {
+                    currentDHT = &dht2;
+                    c = 'd';
+                } else {
+                    currentDHT = &dht1;
+                    c = 'u';
+                }
+                gfx->drawChar(220, TEMP_POINT.y, c);
+                graph.dht = currentDHT;
+                graphHumidity.dht = currentDHT;
+                updateDHT(currentDHT);
+            }
+        }
+
+        dht1.exec();
+        dht2.exec();
+        if (currentDHT->isUpdate()) {
+            updateDHT(currentDHT);
+        }
+        timerLight.exec();
+        if (prevSec != timer.getHour().seconds) {
             tVis.update(timer);
 
             prevSec = timer.getHour().seconds;
@@ -116,15 +128,17 @@ int main(int argc, char* argv[]) {
             graphHumidity.update(true);
         };
 
-        auto point = touchScreen.getPoint();
-        GFX::initIO();
-        if (point.y < 40 && point.y > 10 && point.x > 0) {
-            setTime(&touchScreen, &timer, &tVis);
-            setMainPage();
-            graph.initGraph();
-            graphHumidity.initGraph();
-        }
     }
+}
+
+void updateDHT(DHT * dht) {
+    char buffer[10];
+    auto info = dht->getIstantaneus();
+    gfx->setFont(&smallFont);
+    sprintf(buffer, "%d.%d", std::get<0>(info) / 10, std::get<0>(info) % 10);
+    gfx->drawString(TEMP_POINT, buffer);
+    sprintf(buffer, "%d.%d", std::get<1>(info) / 10, std::get<1>(info) % 10);
+    gfx->drawString(HUMIDITY_POINT, buffer);
 }
 
 void initGraphics() {
@@ -139,15 +153,15 @@ void initGraphics() {
     while (true) {
         if (ILI9341::ILI9341::checkPresence()) {
             trace_printf("Found ILI9341\n");
-            graphics = new ILI9341::ILI9341 { };
+            gfx = new ILI9341::ILI9341 { };
             break;
         } else if (ILI9325::checkPresence()) {
             trace_printf("Found ILI925\n");
-            graphics = new ILI9325 { };
+            gfx = new ILI9325 { };
             break;
         } else if (HX8367::HX8367::checkPresence()) {
             trace_printf("Found HX8367\n");
-            graphics = new HX8367::HX8367 { };
+            gfx = new HX8367::HX8367 { };
             break;
         }
 
@@ -155,77 +169,15 @@ void initGraphics() {
 }
 
 static void setMainPage() {
-
-    graphics->fillRect(Point(0, 0), graphics->width, graphics->height, BLACK);
-    graphics->drawRect(Point(1, 0), graphics->width - 2, 32, WHITE);
-    graphics->drawRect(Point(1, 32), graphics->width - 2, 32, WHITE);
-    graphics->setForeground(WHITE);
-    graphics->setFont(&bigFont);
-    graphics->setAddrWindow(0,0,graphics->width-1,graphics->height-1);
-    graphics->drawString(HOUR_START_POINT, "Hour:  :  :");
-    graphics->setFont(&smallFont);
-    graphics->drawString(TEMP_START_POINT, "Temp: 00.0 Humidity:");
-}
-
-struct TouchFunc{
-    Point center;
-    std::function<void()> func;
-};
-
-
-
-static void setTime(TouchScreen * touchScreen, Timer * timer, TimerVisual * tVis) {
-    constexpr uint16_t touchRadious=100;
-    TouchFunc  touchFuncs[] = {
-            { Point{30,100},[tVis, timer](){tVis->hour->incTime(*timer);}},
-            { Point{110,100},[tVis, timer](){tVis->minute->incTime(*timer);}},
-            { Point{190,100},[tVis, timer](){tVis->second->incTime(*timer);}},
-            { Point{30,200},[tVis, timer](){tVis->hour->decTime(*timer);}},
-            { Point{110,200},[tVis, timer](){tVis->minute->decTime(*timer);}},
-            { Point{190,200},[tVis, timer](){tVis->second->decTime(*timer);}},
-    };
-
-
-    int32_t prevSec = 0;
-    graphics->fillRect(Point(0, 40), graphics->width, graphics->height, BLACK);
-
-    graphics->setFont(&bigFont);
-    graphics->setForeground(BLACK);
-
-    graphics->fillCircle(Point(30,100),25, WHITE );
-    graphics->fillCircle(Point(110,100),25, WHITE );
-    graphics->fillCircle(Point(190,100),25, WHITE );
-
-    graphics->fillCircle(Point(30,200),25, WHITE );
-    graphics->fillCircle(Point(110,200),25, WHITE );
-    graphics->fillCircle(Point(190,200),25, WHITE );
-
-    graphics->drawString(Point(14, 100), "H+");
-    graphics->drawString(Point(94, 100), "M+");
-    graphics->drawString(Point(174, 100), "S+");
-
-    graphics->drawString(Point(14, 200), "H-");
-    graphics->drawString(Point(94, 200), "M-");
-    graphics->drawString(Point(174, 200), "S-");
-
-    while (true) {
-        if (prevSec != timer->getHour().seconds) {
-            tVis->update(*timer);
-            prevSec = timer->getHour().seconds;
-        };
-
-        auto point = touchScreen->getPoint();
-        GFX::initIO();
-        trace_printf("touch: %d, %d\n", point.x, point.y);
-        if (point.y < 40 && point.y > 10 && point.x > 0) {
-            return;
-        }
-        for(auto & touchFunc: touchFuncs ){
-            if (point.distSquare(touchFunc.center) < touchRadious){
-                touchFunc.func();
-            }
-        }
-    }
+    gfx->fillRect(Point(0, 0), gfx->width, gfx->height, BLACK);
+    gfx->drawRect(Point(1, 0), gfx->width - 2, 32, WHITE);
+    gfx->drawRect(Point(1, 32), gfx->width - 2, 32, WHITE);
+    gfx->setForeground(WHITE);
+    gfx->setFont(&bigFont);
+    gfx->setAddrWindow(0, 0, gfx->width - 1, gfx->height - 1);
+    gfx->drawString(HOUR_START_POINT, "Hour:  :  :");
+    gfx->setFont(&smallFont);
+    gfx->drawString(TEMP_START_POINT, "Temp: 00.0 Humidity:");
 }
 
 #pragma GCC diagnostic pop
