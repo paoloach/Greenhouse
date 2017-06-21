@@ -16,13 +16,17 @@
 class TempGraph {
 public:
     TempGraph(uint16_t top, uint16_t bottom, Timer & timer, DHT * dht, uint16_t min,uint16_t max, uint8_t index);
+    ~TempGraph(){delete data;}
     void update(bool paint);
     void paintGraph(bool clear);
     void initGraph();
     DHT * dht;
-    int   minuteFromPoint;
+
 private:
-    constexpr static uint8_t dataSize = 100;
+    static void readSetting();
+    static void writeSetting();
+    uint8_t dataSize;
+    constexpr static uint8_t startX = 39;
     uint16_t top;
     uint16_t bottom;
     Timer & timer;
@@ -31,7 +35,7 @@ private:
     uint16_t max;
     uint16_t right;
     uint8_t index;
-    std::tuple<int16_t, int16_t> data[dataSize];
+    std::tuple<int16_t, int16_t> * data;
 
 
 };

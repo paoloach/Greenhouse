@@ -285,6 +285,14 @@ SECTIONS
 
     } >RAM AT>FLASH
     
+       
+	.myvars :
+	{
+		FILL(0xFF)
+		*(.config*);
+	} > CONFIG
+    
+    
     /*
      * The uninitialised data sections. NOLOAD is used to avoid
      * the "section `.bss' type changed to PROGBITS" warning
@@ -311,7 +319,8 @@ SECTIONS
         __bss_end__ = .;        /* standard newlib definition */
         _ebss = . ;             /* STM specific definition */
     } >RAM
-
+    
+	
     .noinit_CCMRAM (NOLOAD) : ALIGN(4)
     {
         *(.noinit.CCMRAM .noinit.CCMRAM.*)         

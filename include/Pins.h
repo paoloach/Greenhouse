@@ -36,11 +36,18 @@
  * Sensor1 --> A7
  * Sensor2 --> A6
  *
+ * HeaterUp -> A2
+ * HeaterDown -> A3
+ *
  * Rele-N -->  B10
  * Rele   -->  B11
  *
  */
 
+constexpr auto HEATER_UP_PORT=GPIOA;
+constexpr auto HEATER_UP_PIN=GPIO_Pin_2;
+constexpr auto HEATER_DOWN_PORT=GPIOA;
+constexpr auto HEATER_DOWN_PIN=GPIO_Pin_3;
 
 constexpr auto BUTTON_1_PORT=GPIOA;
 constexpr auto BUTTON_1_PIN=GPIO_Pin_9;

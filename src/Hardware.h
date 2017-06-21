@@ -12,6 +12,7 @@
 #include "Button.h"
 #include "DHT.h"
 #include "GFX.h"
+#include "Heaters.h"
 
 extern DHT dht1;
 extern DHT dht2;
@@ -21,6 +22,7 @@ extern Button buttonInc;
 extern Button buttonDec;
 extern Button buttonNext;
 extern Button button5;
+extern Heaters heaters;
 
 
 #endif /* HARDWARE_H_ */

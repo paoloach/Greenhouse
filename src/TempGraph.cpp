@@ -10,13 +10,19 @@
 #include "diag/Trace.h"
 #include "TempGraph.h"
 #include "Hardware.h"
+#include "Configuration.h"
+
 
 TempGraph::TempGraph(uint16_t top, uint16_t bottom, Timer & timer, DHT * dht, uint16_t min, uint16_t max, uint8_t index) :
-        dht(dht), minuteFromPoint(20), top(top), bottom(bottom), timer(timer), next(timer.getHour()), min(min), max(max), right((max + min) / 2), index(index) {
+        dht(dht), top(top), bottom(bottom), timer(timer), next(timer.getHour()), min(min), max(max), right((max + min) / 2), index(index) {
+    dataSize = gfx->width - startX;
+    data = new std::tuple<int16_t, int16_t>[dataSize];
+    if (data == nullptr) {
+        trace_puts("--------MEMORY ALLOCATION_FAILURE\n");
+    }
     for (int i = 0; i < dataSize; i++) {
         data[i] = std::make_tuple(1000, 1000);
     }
-
 }
 
 void TempGraph::update(bool paint) {
@@ -24,7 +30,7 @@ void TempGraph::update(bool paint) {
         //auto value = dht->getMean();
         auto value = dht->getIstantaneus();
         next = timer.getHour();
-        next.incMinute(minuteFromPoint);
+        next.incMinute(Configuration::minuteFromPoint);
         if (paint) {
             paintGraph(true);
         }
@@ -58,7 +64,7 @@ void TempGraph::paintGraph(bool clear) {
 
     uint16_t temp;
     Point prevTemp;
-    Point p(39, 0);
+    Point p(startX, 0);
     for (int i = 0; i < dataSize; i++) {
         if (index == 0)
             temp = std::get<0>(data[i]);
@@ -93,7 +99,7 @@ void TempGraph::paintGraph(bool clear) {
             gfx->drawLine(prevTemp, p, Color6Bit(red, green, blue));
         }
         prevTemp = p;
-        p.x += 2;
+        p.x++;
     }
 
     for (uint8_t i = 1; i <= 5; i++) {

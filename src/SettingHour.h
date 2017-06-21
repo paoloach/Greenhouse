@@ -12,20 +12,17 @@
 
 #include "Hour.h"
 #include "Hardware.h"
+#include "SettingRow.h"
 
-class SettingHour {
+class SettingHour : public SettingRow{
 public:
-    SettingHour(Hour & hour, Point point): hour(hour), point(point), selected(false){};
-    virtual void inc()=0;
-    virtual void dec()=0;
+    SettingHour(Hour & hour, Point point): hour(hour), point(point){};
+    virtual ~SettingHour() = default;
     virtual void setBuffer()=0;
     void print();
-    void select() {selected=true;}
-    void deselect() {selected=false;}
 protected:
     Hour & hour;
     Point point;
-    bool selected;
     char buffer[4];
 };
 

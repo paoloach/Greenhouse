@@ -68,6 +68,7 @@ int main(int argc, char* argv[]) {
 
     trace_printf("System clock: %u Hz\n", SystemCoreClock);
 
+    Configuration::read();
     timer.start();
     initGraphics();
 
@@ -90,7 +91,7 @@ int main(int argc, char* argv[]) {
         if (buttonSetting.check()) {
             if (buttonSetting) {
                 timer.stop = true;
-                std::unique_ptr<Setting> setting(new Setting(timer.getHour(), timerLight.start, timerLight.end));
+                std::unique_ptr<Setting> setting(new Setting(timer.getHour()));
                 setting->run();
                 timer.stop = false;
                 setMainPage();
@@ -118,6 +119,12 @@ int main(int argc, char* argv[]) {
         dht2.exec();
         if (currentDHT->isUpdate()) {
             updateDHT(currentDHT);
+        }
+        if (dht1.isUpdate()){
+             heaters.updateUp(std::get<0>(dht1.getIstantaneus()));
+        }
+        if (dht2.isUpdate()){
+             heaters.updateUp(std::get<0>(dht2.getIstantaneus()));
         }
         timerLight.exec();
         if (prevSec != timer.getHour().seconds) {

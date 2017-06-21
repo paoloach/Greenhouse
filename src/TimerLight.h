@@ -31,9 +31,6 @@ private:
     Timer & timer;
     bool on;
     int32_t currentTime;
-public:
-    Hour start;
-    Hour end;
 };
 
 #endif /* TIMERLIGHT_H_ */

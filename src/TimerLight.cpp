@@ -7,9 +7,10 @@
 
 #include "diag/Trace.h"
 #include "TimerLight.h"
+#include "Configuration.h"
 
 TimerLight::TimerLight(Timer & timer) :
-        timer(timer), on(false), currentTime(timer.hour.seconds), start(7, 0, 0), end(21, 0, 0) {
+        timer(timer), on(false), currentTime(timer.hour.seconds) {
     // Enable GPIO Peripheral clock
     RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOA | RCC_APB2Periph_GPIOB, ENABLE);
 
@@ -31,7 +32,7 @@ TimerLight::TimerLight(Timer & timer) :
 void TimerLight::exec() {
     if (currentTime < timer.hour.seconds) {
         currentTime = timer.hour.seconds;
-        if (timer.hour > start && end > timer.hour) {
+        if (timer.hour > Configuration::onHour && Configuration::offHour > timer.hour) {
             if (!on) {
                 turnOn();
                 trace_puts("ON\n");

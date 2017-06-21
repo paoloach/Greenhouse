@@ -16,15 +16,15 @@ public:
     Hour();
     Hour(uint32_t hours, uint32_t minuts, uint32_t seconds);
 public:
-    uint getSeconds() {
+    uint16_t getSeconds() {
         return seconds % 60;
     }
 
-    uint getMinutes() {
+    uint16_t getMinutes() {
         return (seconds / 60) % 60;
     }
 
-    uint getHours() {
+    uint16_t getHours() {
         return seconds / 3600;
     }
 

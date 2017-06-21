@@ -8,12 +8,15 @@
 #ifndef SETTING_H_
 #define SETTING_H_
 
+#include "Setting.h"
 #include "SettingHour.h"
 
 class Setting {
 public:
-    Setting(Hour & time, Hour & on, Hour & off );
-
+    Setting(Hour & time);
+    ~Setting() {
+        Configuration::save();
+    }
     void run();
 private:
     void setPage();
@@ -25,7 +28,10 @@ private:
     SettingMinutes onMinutes;
     SettingHours offHours;
     SettingMinutes offMinutes;
-    SettingHour * current;
+    SettingSampleTime sampleTime;
+    SettingTempHeaterUp heaterUp;
+    SettingTempHeaterDown heaterDown;
+    SettingRow * current;
 
 
 
