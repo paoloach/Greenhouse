@@ -116,6 +116,11 @@ protected:
                 "nop\n"// 14 ns at 70 Mhz
                 "nop\n"// 14 ns at 70 Mhz
                 "nop\n"// 14 ns at 70 Mhz
+                "nop\n"// 14 ns at 70 Mhz
+                "nop\n"// 14 ns at 70 Mhz
+                "nop\n"// 14 ns at 70 Mhz
+                "nop\n"// 14 ns at 70 Mhz
+                "nop\n"// 14 ns at 70 Mhz
         );
         return data;
     }
@@ -145,11 +150,21 @@ public:
                 "nop\n"// 14 ns at 70 Mhz
                 "nop\n"// 14 ns at 70 Mhz
                 "nop\n"// 14 ns at 70 Mhz
+                "nop\n"// 14 ns at 70 Mhz
+                "nop\n"// 14 ns at 70 Mhz
+                "nop\n"// 14 ns at 70 Mhz
+                "nop\n"// 14 ns at 70 Mhz
+                "nop\n"// 14 ns at 70 Mhz
 
         );
         writeDataByte(byte);
         __asm(
                 "nop\n" // 14 ns at 70 Mhz
+                "nop\n"// 14 ns at 70 Mhz
+                "nop\n"// 14 ns at 70 Mhz
+                "nop\n"// 14 ns at 70 Mhz
+                "nop\n"// 14 ns at 70 Mhz
+                "nop\n"// 14 ns at 70 Mhz
                 "nop\n"// 14 ns at 70 Mhz
                 "nop\n"// 14 ns at 70 Mhz
                 "nop\n"// 14 ns at 70 Mhz
@@ -171,6 +186,11 @@ public:
                 "nop\n"// 14 ns at 70 Mhz
                 "nop\n"// 14 ns at 70 Mhz
                 "nop\n"// 14 ns at 70 Mhz
+                "nop\n"// 14 ns at 70 Mhz
+                "nop\n"// 14 ns at 70 Mhz
+                "nop\n"// 14 ns at 70 Mhz
+                "nop\n"// 14 ns at 70 Mhz
+                "nop\n"// 14 ns at 70 Mhz
         );
         writeDataByte(word);
         __asm(
@@ -179,10 +199,20 @@ public:
                 "nop\n"// 14 ns at 70 Mhz
                 "nop\n"// 14 ns at 70 Mhz
                 "nop\n"// 14 ns at 70 Mhz
+                "nop\n"// 14 ns at 70 Mhz
+                "nop\n"// 14 ns at 70 Mhz
+                "nop\n"// 14 ns at 70 Mhz
+                "nop\n"// 14 ns at 70 Mhz
+                "nop\n"// 14 ns at 70 Mhz
         );
         writeDataByte((word >> 8));
         __asm(
                 "nop\n" // 14 ns at 70 Mhz
+                "nop\n"// 14 ns at 70 Mhz
+                "nop\n"// 14 ns at 70 Mhz
+                "nop\n"// 14 ns at 70 Mhz
+                "nop\n"// 14 ns at 70 Mhz
+                "nop\n"// 14 ns at 70 Mhz
                 "nop\n"// 14 ns at 70 Mhz
                 "nop\n"// 14 ns at 70 Mhz
                 "nop\n"// 14 ns at 70 Mhz
@@ -204,10 +234,20 @@ public:
                 "nop\n"// 14 ns at 70 Mhz
                 "nop\n"// 14 ns at 70 Mhz
                 "nop\n"// 14 ns at 70 Mhz
+                "nop\n"// 14 ns at 70 Mhz
+                "nop\n"// 14 ns at 70 Mhz
+                "nop\n"// 14 ns at 70 Mhz
+                "nop\n"// 14 ns at 70 Mhz
+                "nop\n"// 14 ns at 70 Mhz
         );
         writeDataByte(byte1);
         __asm(
                 "nop\n" // 14 ns at 70 Mhz
+                "nop\n"// 14 ns at 70 Mhz
+                "nop\n"// 14 ns at 70 Mhz
+                "nop\n"// 14 ns at 70 Mhz
+                "nop\n"// 14 ns at 70 Mhz
+                "nop\n"// 14 ns at 70 Mhz
                 "nop\n"// 14 ns at 70 Mhz
                 "nop\n"// 14 ns at 70 Mhz
                 "nop\n"// 14 ns at 70 Mhz
@@ -220,10 +260,20 @@ public:
                 "nop\n"// 14 ns at 70 Mhz
                 "nop\n"// 14 ns at 70 Mhz
                 "nop\n"// 14 ns at 70 Mhz
+                "nop\n"// 14 ns at 70 Mhz
+                "nop\n"// 14 ns at 70 Mhz
+                "nop\n"// 14 ns at 70 Mhz
+                "nop\n"// 14 ns at 70 Mhz
+                "nop\n"// 14 ns at 70 Mhz
         );
         writeDataByte(byte3);
         __asm(
                 "nop\n" // 14 ns at 70 Mhz
+                "nop\n"// 14 ns at 70 Mhz
+                "nop\n"// 14 ns at 70 Mhz
+                "nop\n"// 14 ns at 70 Mhz
+                "nop\n"// 14 ns at 70 Mhz
+                "nop\n"// 14 ns at 70 Mhz
                 "nop\n"// 14 ns at 70 Mhz
                 "nop\n"// 14 ns at 70 Mhz
                 "nop\n"// 14 ns at 70 Mhz
@@ -244,10 +294,20 @@ public:
                 "nop\n"// 14 ns at 70 Mhz
                 "nop\n"// 14 ns at 70 Mhz
                 "nop\n"// 14 ns at 70 Mhz
+                "nop\n"// 14 ns at 70 Mhz
+                "nop\n"// 14 ns at 70 Mhz
+                "nop\n"// 14 ns at 70 Mhz
+                "nop\n"// 14 ns at 70 Mhz
+                "nop\n"// 14 ns at 70 Mhz
         );
         writeDataByte(byte1);
         __asm(
                 "nop\n" // 14 ns at 70 Mhz
+                "nop\n"// 14 ns at 70 Mhz
+                "nop\n"// 14 ns at 70 Mhz
+                "nop\n"// 14 ns at 70 Mhz
+                "nop\n"// 14 ns at 70 Mhz
+                "nop\n"// 14 ns at 70 Mhz
                 "nop\n"// 14 ns at 70 Mhz
                 "nop\n"// 14 ns at 70 Mhz
                 "nop\n"// 14 ns at 70 Mhz
@@ -260,6 +320,11 @@ public:
                 "nop\n"// 14 ns at 70 Mhz
                 "nop\n"// 14 ns at 70 Mhz
                 "nop\n"// 14 ns at 70 Mhz
+                "nop\n"// 14 ns at 70 Mhz
+                "nop\n"// 14 ns at 70 Mhz
+                "nop\n"// 14 ns at 70 Mhz
+                "nop\n"// 14 ns at 70 Mhz
+                "nop\n"// 14 ns at 70 Mhz
         );
         writeDataByte(byte3);
         __asm(
@@ -268,10 +333,20 @@ public:
                 "nop\n"// 14 ns at 70 Mhz
                 "nop\n"// 14 ns at 70 Mhz
                 "nop\n"// 14 ns at 70 Mhz
+                "nop\n"// 14 ns at 70 Mhz
+                "nop\n"// 14 ns at 70 Mhz
+                "nop\n"// 14 ns at 70 Mhz
+                "nop\n"// 14 ns at 70 Mhz
+                "nop\n"// 14 ns at 70 Mhz
         );
         writeDataByte(byte4);
         __asm(
                 "nop\n" // 14 ns at 70 Mhz
+                "nop\n"// 14 ns at 70 Mhz
+                "nop\n"// 14 ns at 70 Mhz
+                "nop\n"// 14 ns at 70 Mhz
+                "nop\n"// 14 ns at 70 Mhz
+                "nop\n"// 14 ns at 70 Mhz
                 "nop\n"// 14 ns at 70 Mhz
                 "nop\n"// 14 ns at 70 Mhz
                 "nop\n"// 14 ns at 70 Mhz
@@ -293,10 +368,20 @@ public:
                 "nop\n"// 14 ns at 70 Mhz
                 "nop\n"// 14 ns at 70 Mhz
                 "nop\n"// 14 ns at 70 Mhz
+                "nop\n"// 14 ns at 70 Mhz
+                "nop\n"// 14 ns at 70 Mhz
+                "nop\n"// 14 ns at 70 Mhz
+                "nop\n"// 14 ns at 70 Mhz
+                "nop\n"// 14 ns at 70 Mhz
         );
         writeDataByte(byte1);
         __asm(
                 "nop\n" // 14 ns at 70 Mhz
+                "nop\n"// 14 ns at 70 Mhz
+                "nop\n"// 14 ns at 70 Mhz
+                "nop\n"// 14 ns at 70 Mhz
+                "nop\n"// 14 ns at 70 Mhz
+                "nop\n"// 14 ns at 70 Mhz
                 "nop\n"// 14 ns at 70 Mhz
                 "nop\n"// 14 ns at 70 Mhz
                 "nop\n"// 14 ns at 70 Mhz
@@ -309,10 +394,20 @@ public:
                 "nop\n"// 14 ns at 70 Mhz
                 "nop\n"// 14 ns at 70 Mhz
                 "nop\n"// 14 ns at 70 Mhz
+                "nop\n"// 14 ns at 70 Mhz
+                "nop\n"// 14 ns at 70 Mhz
+                "nop\n"// 14 ns at 70 Mhz
+                "nop\n"// 14 ns at 70 Mhz
+                "nop\n"// 14 ns at 70 Mhz
         );
         writeDataByte(byte3);
         __asm(
                 "nop\n" // 14 ns at 70 Mhz
+                "nop\n"// 14 ns at 70 Mhz
+                "nop\n"// 14 ns at 70 Mhz
+                "nop\n"// 14 ns at 70 Mhz
+                "nop\n"// 14 ns at 70 Mhz
+                "nop\n"// 14 ns at 70 Mhz
                 "nop\n"// 14 ns at 70 Mhz
                 "nop\n"// 14 ns at 70 Mhz
                 "nop\n"// 14 ns at 70 Mhz
@@ -325,10 +420,20 @@ public:
                 "nop\n"// 14 ns at 70 Mhz
                 "nop\n"// 14 ns at 70 Mhz
                 "nop\n"// 14 ns at 70 Mhz
+                "nop\n"// 14 ns at 70 Mhz
+                "nop\n"// 14 ns at 70 Mhz
+                "nop\n"// 14 ns at 70 Mhz
+                "nop\n"// 14 ns at 70 Mhz
+                "nop\n"// 14 ns at 70 Mhz
         );
         writeDataByte(byte5);
         __asm(
                 "nop\n" // 14 ns at 70 Mhz
+                "nop\n"// 14 ns at 70 Mhz
+                "nop\n"// 14 ns at 70 Mhz
+                "nop\n"// 14 ns at 70 Mhz
+                "nop\n"// 14 ns at 70 Mhz
+                "nop\n"// 14 ns at 70 Mhz
                 "nop\n"// 14 ns at 70 Mhz
                 "nop\n"// 14 ns at 70 Mhz
                 "nop\n"// 14 ns at 70 Mhz
@@ -411,16 +516,31 @@ public:
                 "nop\n" // 14 ns at 70 Mhz
                 "nop\n"// 14 ns at 70 Mhz
                 "nop\n"// 14 ns at 70 Mhz
+                "nop\n"// 14 ns at 70 Mhz
+                "nop\n"// 14 ns at 70 Mhz
+                "nop\n"// 14 ns at 70 Mhz
+                "nop\n"// 14 ns at 70 Mhz
+                "nop\n"// 14 ns at 70 Mhz
         );
         writeDataByte(color.getBlue());
         __asm(
                 "nop\n" // 14 ns at 70 Mhz
                 "nop\n"// 14 ns at 70 Mhz
                 "nop\n"// 14 ns at 70 Mhz
+                "nop\n"// 14 ns at 70 Mhz
+                "nop\n"// 14 ns at 70 Mhz
+                "nop\n"// 14 ns at 70 Mhz
+                "nop\n"// 14 ns at 70 Mhz
+                "nop\n"// 14 ns at 70 Mhz
         );
         writeDataByte(color.getGreen());
         __asm(
                 "nop\n" // 14 ns at 70 Mhz
+                "nop\n"// 14 ns at 70 Mhz
+                "nop\n"// 14 ns at 70 Mhz
+                "nop\n"// 14 ns at 70 Mhz
+                "nop\n"// 14 ns at 70 Mhz
+                "nop\n"// 14 ns at 70 Mhz
                 "nop\n"// 14 ns at 70 Mhz
                 "nop\n"// 14 ns at 70 Mhz
         );
@@ -435,16 +555,31 @@ public:
                     "nop\n" // 14 ns at 70 Mhz
                     "nop\n"// 14 ns at 70 Mhz
                     "nop\n"// 14 ns at 70 Mhz
+                    "nop\n"// 14 ns at 70 Mhz
+                    "nop\n"// 14 ns at 70 Mhz
+                    "nop\n"// 14 ns at 70 Mhz
+                    "nop\n"// 14 ns at 70 Mhz
+                    "nop\n"// 14 ns at 70 Mhz
             );
             writeDataByte(color.getBlue());
             __asm(
                     "nop\n" // 14 ns at 70 Mhz
                     "nop\n"// 14 ns at 70 Mhz
                     "nop\n"// 14 ns at 70 Mhz
+                    "nop\n"// 14 ns at 70 Mhz
+                    "nop\n"// 14 ns at 70 Mhz
+                    "nop\n"// 14 ns at 70 Mhz
+                    "nop\n"// 14 ns at 70 Mhz
+                    "nop\n"// 14 ns at 70 Mhz
             );
             writeDataByte(color.getGreen());
             __asm(
                     "nop\n" // 14 ns at 70 Mhz
+                    "nop\n"// 14 ns at 70 Mhz
+                    "nop\n"// 14 ns at 70 Mhz
+                    "nop\n"// 14 ns at 70 Mhz
+                    "nop\n"// 14 ns at 70 Mhz
+                    "nop\n"// 14 ns at 70 Mhz
                     "nop\n"// 14 ns at 70 Mhz
                     "nop\n"// 14 ns at 70 Mhz
             );

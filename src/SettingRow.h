@@ -50,7 +50,7 @@ public:
             gfx->setBackground(WHITE);
 
         }
-        itoa(Configuration::heaterUp, buffer, 10);
+        itoa(getValue(), buffer, 10);
         gfx->drawString(point, buffer);
     }
 protected:

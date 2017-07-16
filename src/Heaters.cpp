@@ -28,6 +28,7 @@ Heaters::Heaters() {
 }
 
 void Heaters::updateUp(int16_t temp){
+    temp /= 10;
     if (temp < Configuration::heaterUp){
         HEATER_UP_PORT->BSRR=HEATER_UP_PIN;
     } else {
@@ -35,6 +36,7 @@ void Heaters::updateUp(int16_t temp){
     }
 }
 void Heaters::updateDown(int16_t temp){
+    temp /= 10;
     if (temp < Configuration::heaterDown){
         HEATER_DOWN_PORT->BSRR=HEATER_DOWN_PIN;
     } else {

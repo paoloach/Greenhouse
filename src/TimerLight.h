@@ -17,15 +17,38 @@ public:
     void exec();
 private:
     void turnOff() {
-        RELE_PORT->BRR = GPIO_Pin_10;
-        RELE_N_PORT->BSRR = RELE_N_PIN;
-        Timer::callbacks.insert({currentTime+2, [](){RELE_N_PORT->BRR = RELE_N_PIN;}});
+        RELE_PORT->BRR = RELE_PIN;
+        GPIO_InitTypeDef GPIO_InitStructure;
+        GPIO_InitStructure.GPIO_Pin = RELE_N_PIN;
+        GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+        GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN_FLOATING;
+        GPIO_Init(RELE_N_PORT, &GPIO_InitStructure);
+
+        Timer::callbacks.insert( { currentTime + 20, []() {
+            GPIO_InitTypeDef GPIO_InitStructure;
+            GPIO_InitStructure.GPIO_Pin = RELE_N_PIN;
+            GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+            GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
+            GPIO_Init(RELE_N_PORT, &GPIO_InitStructure);
+            RELE_N_PORT->BRR = RELE_N_PIN;} });
+
     }
 
     void turnOn() {
         RELE_N_PORT->BRR = RELE_PIN;
-        RELE_PORT->BSRR = RELE_PIN;
-        Timer::callbacks.insert({currentTime+2, [](){RELE_PORT->BRR = RELE_PIN;}});
+        GPIO_InitTypeDef GPIO_InitStructure;
+        GPIO_InitStructure.GPIO_Pin = RELE_PIN;
+        GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+        GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN_FLOATING;
+        GPIO_Init(RELE_PORT, &GPIO_InitStructure);
+
+        Timer::callbacks.insert( { currentTime + 20, []() {
+            GPIO_InitTypeDef GPIO_InitStructure;
+            GPIO_InitStructure.GPIO_Pin = RELE_PIN;
+            GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+            GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
+            GPIO_Init(RELE_PORT, &GPIO_InitStructure);
+            RELE_PORT->BRR = RELE_PIN;} });
     }
 
     Timer & timer;

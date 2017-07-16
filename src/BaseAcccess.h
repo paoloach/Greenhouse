@@ -229,6 +229,13 @@ inline void setData(uint8_t data) {
     setDataOnPort(data, GPIOA);
     setDataOnPort(data, GPIOB);
     setDataOnPort(data, GPIOC);
+    __asm(
+            "nop\n" // 14 ns at 70 Mhz
+            "nop\n"// 14 ns at 70 Mhz
+            "nop\n"// 14 ns at 70 Mhz
+            "nop\n"// 14 ns at 70 Mhz
+            "nop\n"// 14 ns at 70 Mhz
+    );
 }
 
 inline uint8_t readDataOnPort(uint16_t io, GPIO_TypeDef * port ) {

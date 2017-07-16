@@ -95,6 +95,8 @@ int main(int argc, char* argv[]) {
                 setting->run();
                 timer.stop = false;
                 setMainPage();
+                graph.initGraph();
+                graphHumidity.initGraph();
             }
         }
 

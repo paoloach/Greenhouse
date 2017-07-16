@@ -35,18 +35,18 @@ void Configuration::save() {
         modified = true;
     if (readOffMinute() != offHour.getMinutes())
         modified = true;
-    if (modified) {
-        FLASH_Unlock();
-        FLASH_ErasePage((uint32_t) data);
-        FLASH_ProgramHalfWord((uint32_t) data[0], minuteFromPoint);
-        FLASH_ProgramHalfWord((uint32_t) data[1], heaterUp);
-        FLASH_ProgramHalfWord((uint32_t) data[2], heaterDown);
-        FLASH_ProgramHalfWord((uint32_t) data[3], onHour.getHours());
-        FLASH_ProgramHalfWord((uint32_t) data[4], onHour.getMinutes());
-        FLASH_ProgramHalfWord((uint32_t) data[5], offHour.getHours());
-        FLASH_ProgramHalfWord((uint32_t) data[6], offHour.getMinutes());
-        FLASH_Lock();
-    }
+//    if (modified) {
+//        FLASH_Unlock();
+//        FLASH_ErasePage((uint32_t) data);
+//        FLASH_ProgramHalfWord((uint32_t) data[0], minuteFromPoint);
+//        FLASH_ProgramHalfWord((uint32_t) data[1], heaterUp);
+//        FLASH_ProgramHalfWord((uint32_t) data[2], heaterDown);
+//        FLASH_ProgramHalfWord((uint32_t) data[3], onHour.getHours());
+//        FLASH_ProgramHalfWord((uint32_t) data[4], onHour.getMinutes());
+//        FLASH_ProgramHalfWord((uint32_t) data[5], offHour.getHours());
+//        FLASH_ProgramHalfWord((uint32_t) data[6], offHour.getMinutes());
+//        FLASH_Lock();
+//    }
 }
 void Configuration::read() {
     minuteFromPoint = readMinuteFromPoint();
