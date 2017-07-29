@@ -24,7 +24,7 @@ private:
         GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN_FLOATING;
         GPIO_Init(RELE_N_PORT, &GPIO_InitStructure);
 
-        Timer::callbacks.insert( { currentTime + 20, []() {
+        Timer::callbacks.insert( { currentTime + 10, []() {
             GPIO_InitTypeDef GPIO_InitStructure;
             GPIO_InitStructure.GPIO_Pin = RELE_N_PIN;
             GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
@@ -42,7 +42,7 @@ private:
         GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN_FLOATING;
         GPIO_Init(RELE_PORT, &GPIO_InitStructure);
 
-        Timer::callbacks.insert( { currentTime + 20, []() {
+        Timer::callbacks.insert( { currentTime + 10, []() {
             GPIO_InitTypeDef GPIO_InitStructure;
             GPIO_InitStructure.GPIO_Pin = RELE_PIN;
             GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;

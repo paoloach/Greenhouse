@@ -30,7 +30,7 @@ TimerLight::TimerLight(Timer & timer) :
 }
 
 void TimerLight::exec() {
-    if (currentTime < timer.hour.seconds) {
+    if (currentTime != timer.hour.seconds) {
         currentTime = timer.hour.seconds;
         if (timer.hour > Configuration::onHour && Configuration::offHour > timer.hour) {
             if (!on) {

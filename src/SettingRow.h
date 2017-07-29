@@ -9,6 +9,7 @@
 #define SETTINGROW_H_
 
 #include <stdlib.h>
+#include "diag/Trace.h"
 #include "Configuration.h"
 
 class SettingRow {
@@ -41,6 +42,7 @@ protected:
 public:
     virtual void print() {
         char buffer[8];
+        char * iter;
         gfx->setFont(&smallFont);
         if (selected) {
             gfx->setForeground(WHITE);
@@ -51,6 +53,12 @@ public:
 
         }
         itoa(getValue(), buffer, 10);
+        for(iter = buffer; *iter != 0; iter++);
+        *iter = ' ';
+        iter++;
+        *iter = ' ';
+        iter++;
+        *iter = 0;
         gfx->drawString(point, buffer);
     }
 protected:

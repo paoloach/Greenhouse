@@ -27,6 +27,7 @@ TempGraph::TempGraph(uint16_t top, uint16_t bottom, Timer & timer, DHT * dht, ui
 
 void TempGraph::update(bool paint) {
     if (timer.getHour() > next) {
+        trace_puts("Update graph\n");
         //auto value = dht->getMean();
         auto value = dht->getIstantaneus();
         next = timer.getHour();
@@ -34,7 +35,7 @@ void TempGraph::update(bool paint) {
         if (paint) {
             paintGraph(true);
         }
-        memmove(data + 1, data, 99 * sizeof(std::tuple<uint16_t, uint16_t>));
+        memmove(data + 1, data, (dataSize-1) * sizeof(std::tuple<uint16_t, uint16_t>));
 
         data[0] = value;
         if (paint) {
@@ -56,6 +57,7 @@ void TempGraph::initGraph() {
         sprintf(buffer, "%2u", (min + i * stepVal) / 10);
         gfx->drawString(0, bottom - i * step, buffer);
     }
+    next=timer.getHour();
 }
 
 void TempGraph::paintGraph(bool clear) {

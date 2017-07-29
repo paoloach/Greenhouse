@@ -59,6 +59,7 @@ struct TimerVisual {
 static void initGraphics();
 static void setMainPage();
 static void updateDHT(DHT * dht);
+static void updateUpDown(DHT * currentDHT);
 
 int main(int argc, char* argv[]) {
     int32_t prevSec = 0;
@@ -86,6 +87,7 @@ int main(int argc, char* argv[]) {
     graph.initGraph();
     graphHumidity.initGraph();
     DHT * currentDHT = &dht1;
+    updateUpDown(currentDHT);
 
     while (true) {
         if (buttonSetting.check()) {
@@ -97,20 +99,18 @@ int main(int argc, char* argv[]) {
                 setMainPage();
                 graph.initGraph();
                 graphHumidity.initGraph();
+                updateUpDown(currentDHT);
             }
         }
 
         if (buttonNext.check()) {
             if (buttonNext) {
-                char c;
                 if (currentDHT == &dht1) {
                     currentDHT = &dht2;
-                    c = 'd';
                 } else {
                     currentDHT = &dht1;
-                    c = 'u';
                 }
-                gfx->drawChar(220, TEMP_POINT.y, c);
+                updateUpDown(currentDHT);
                 graph.dht = currentDHT;
                 graphHumidity.dht = currentDHT;
                 updateDHT(currentDHT);
@@ -122,11 +122,11 @@ int main(int argc, char* argv[]) {
         if (currentDHT->isUpdate()) {
             updateDHT(currentDHT);
         }
-        if (dht1.isUpdate()){
-             heaters.updateUp(std::get<0>(dht1.getIstantaneus()));
+        if (dht1.isUpdate()) {
+            heaters.updateUp(std::get<0>(dht1.getIstantaneus()));
         }
-        if (dht2.isUpdate()){
-             heaters.updateUp(std::get<0>(dht2.getIstantaneus()));
+        if (dht2.isUpdate()) {
+            heaters.updateUp(std::get<0>(dht2.getIstantaneus()));
         }
         timerLight.exec();
         if (prevSec != timer.getHour().seconds) {
@@ -138,6 +138,17 @@ int main(int argc, char* argv[]) {
         };
 
     }
+}
+
+void updateUpDown(DHT * currentDHT) {
+    char c;
+    if (currentDHT == &dht2) {
+        c = 'd';
+    } else {
+        c = 'u';
+    }
+    gfx->setFont(&bigFont);
+    gfx->drawChar(220, TEMP_POINT.y, c);
 }
 
 void updateDHT(DHT * dht) {
