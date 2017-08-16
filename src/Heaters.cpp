@@ -10,6 +10,8 @@
 #include "Configuration.h"
 #include "Pins.h"
 #include "Heaters.h"
+#include "diag/Trace.h"
+
 
 Heaters::Heaters() {
     GPIO_InitTypeDef GPIO_InitStructure;
@@ -30,8 +32,10 @@ Heaters::Heaters() {
 void Heaters::updateUp(int16_t temp){
     temp /= 10;
     if (temp < Configuration::heaterUp){
+        trace_printf("HEATER UP ON\n");
         HEATER_UP_PORT->BSRR=HEATER_UP_PIN;
     } else {
+        trace_printf("HEATER UP OFF\n");
         HEATER_UP_PORT->BRR=HEATER_UP_PIN;
     }
 }

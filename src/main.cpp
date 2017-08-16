@@ -67,6 +67,33 @@ int main(int argc, char* argv[]) {
     TimerVisual tVis;
     TimerLight timerLight(timer);
 
+
+    trace_printf("HSI_ON: %d\n",RCC->CR & 1);
+    trace_printf("HSI_RDY: %d\n",(RCC->CR >> 1) & 1);
+    trace_printf("HSI_TRIM: %d\n",(RCC->CR >> 3) & 0x1F);
+    trace_printf("HSI_CAL: %d\n",(RCC->CR >> 8) & 0xFF);
+    trace_printf("HSE_ON: %d\n",(RCC->CR >> 16) & 0x1);
+    trace_printf("HSE_RDY: %d\n",(RCC->CR >> 17) & 0x1);
+    trace_printf("HSE_BYP: %d\n",(RCC->CR >> 18) & 0x1);
+    trace_printf("CSS_ON: %d\n",(RCC->CR >> 19) & 0x1);
+    trace_printf("PLL_ON: %d\n",(RCC->CR >> 24) & 0x1);
+    trace_printf("PLL_READY: %d\n",(RCC->CR >> 25) & 0x1);
+
+    trace_printf("SW: %d\n",(RCC->CFGR >> 0) & 0x3);
+    trace_printf("SWS: %d\n",(RCC->CFGR >> 2) & 0x3);
+    trace_printf("HPRE: %d\n",(RCC->CFGR >> 4) & 0xF);
+    trace_printf("PPRE1: %d\n",(RCC->CFGR >> 8) & 0x7);
+    trace_printf("PPRE2: %d\n",(RCC->CFGR >> 11) & 0xF);
+    trace_printf("ADCPRE: %d\n",(RCC->CFGR >> 14) & 0x3);
+    trace_printf("PLL_SRC: %d\n",(RCC->CFGR >> 16) & 0x1);
+    trace_printf("PLL_XTPRE: %d\n",(RCC->CFGR >> 17) & 0x1);
+    trace_printf("PLL_MUL: %d\n",(RCC->CFGR >> 18) & 0xf);
+    trace_printf("USB_PRE: %d\n",(RCC->CFGR >> 22) & 0x1);
+    trace_printf("MCO: %d\n",(RCC->CFGR >> 24) & 0x7);
+
+    trace_printf("RCC_SR: %08X\n",RCC->CR);
+    trace_printf("RCC_CFGR: %08X\n",RCC->CFGR);
+
     trace_printf("System clock: %u Hz\n", SystemCoreClock);
 
     Configuration::read();
@@ -119,14 +146,19 @@ int main(int argc, char* argv[]) {
 
         dht1.exec();
         dht2.exec();
-        if (currentDHT->isUpdate()) {
-            updateDHT(currentDHT);
-        }
         if (dht1.isUpdate()) {
+            if (currentDHT == &dht1){
+                updateDHT(currentDHT);
+            }
+            trace_printf("DH1 update\n");
             heaters.updateUp(std::get<0>(dht1.getIstantaneus()));
         }
         if (dht2.isUpdate()) {
-            heaters.updateUp(std::get<0>(dht2.getIstantaneus()));
+            if (currentDHT == &dht2){
+                updateDHT(currentDHT);
+            }
+            trace_printf("DH2 update\n");
+            heaters.updateDown(std::get<0>(dht2.getIstantaneus()));
         }
         timerLight.exec();
         if (prevSec != timer.getHour().seconds) {
